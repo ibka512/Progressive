@@ -563,14 +563,15 @@
 </div>
 
 <div id="batch-bar" class="batch-bar" style="display: none;">
-  <span class="batch-count"><span id="batch-count-num">0</span> selected</span>
-  <div style="display: flex; gap: 4px; align-items: center;">
-    <button id="btn-batch-move" class="icon-text-gap"><span class="material-symbols-rounded" style="font-size:1.1rem;">move_item</span> Move</button>
-    <button id="btn-batch-del" style="background: var(--accent-red); color: var(--on-primary);" class="icon-text-gap"><span class="material-symbols-rounded" style="font-size:1.1rem;">delete</span> Delete</button>
-    <div class="batch-divider" style="width: 1px; height: 16px; background: rgba(139, 121, 103, 0.2); margin: 0 2px;"></div>
-    <button id="btn-batch-cancel" title="Cancel"><span class="material-symbols-rounded" style="font-size:1.3rem;">close</span></button>
+  <span class="batch-count"><span id="batch-count-num">0</span> 项已选</span>
+  <div style="display: flex; gap: 2px; align-items: center; flex-shrink: 0;">
+    <button id="btn-batch-move" class="icon-text-gap"><span class="material-symbols-rounded" style="font-size:1.1rem;">move_item</span> 移动</button>
+    <button id="btn-batch-del" style="background: var(--accent-red); color: var(--on-primary);" class="icon-text-gap"><span class="material-symbols-rounded" style="font-size:1.1rem;">delete</span> 删除</button>
+    <div class="batch-divider" style="width: 1px; height: 16px; background: rgba(139, 121, 103, 0.2); margin: 0 4px;"></div>
+    <button id="btn-batch-cancel" title="取消"><span class="material-symbols-rounded" style="font-size:1.3rem;">close</span></button>
   </div>
 </div>
+
 
 
 <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>

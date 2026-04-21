@@ -1152,7 +1152,10 @@ button#btn-test-vibrate:active {
     display: flex;
     align-items: baseline;
     gap: 6px;
+    white-space: nowrap; /* 锁定左侧数据面板的物理形态 */
+    flex-shrink: 1; /* 在极端窄屏的拥挤态势下允许左侧妥协，保全右侧核心操作区的完整 */
 }
+
 
 #batch-count-num {
     font-size: 1.35rem;
@@ -1567,16 +1570,18 @@ button#btn-test-vibrate:active {
 /* 🚀 视觉减负：幽灵态操作组 (Ghost Buttons) */
 .batch-bar button { 
     width: auto !important; 
-    padding: 10px 16px !important; 
+    padding: 8px 12px !important; /* 缩减物理内边距，为移动端小屏释放黄金呼吸空间 */
     border-radius: var(--radius-full) !important; 
     /* 强制剥离 HTML 中残留的 inline 内联样式污染（背景色、廉价投影、生硬边框） */
     box-shadow: none !important; 
     border: none !important;
     background: transparent !important; 
     font-weight: 800 !important;
-    font-size: 0.95rem !important;
+    font-size: 0.9rem !important; /* 配合方块字微缩字号，提升视觉密度 */
+    white-space: nowrap !important; /* 强制光学防线：禁止文字挤压换行导致容器崩塌 */
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
 }
+
 
 /* 独立情绪色彩赋予，仅依靠文字/图标传达功能 */
 #btn-batch-move { color: var(--primary) !important; }
