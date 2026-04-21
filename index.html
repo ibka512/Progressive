@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="manifest" href="manifest.json">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      console.log('Service Worker registered');
+    });
+  }
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<meta name="theme-color" content="#8b7967">
+
+<title>Pendulum</title>
+
+
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@600;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0,0" rel="stylesheet" />
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+    chtml: { scale: 1.1 } 
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<div class="global-header" id="global-header">
+  <div class="header-titles">
+    <h2 id="app-global-title" style="font-family: var(--font-ui); letter-spacing: 1px;"><span class="material-symbols-rounded" style="color:var(--tertiary); font-size:1.8rem; margin-right: 6px;">home</span> Pendulum</h2>
+  </div>
+
+  <button class="glass-icon-btn theme-toggle-btn" title="Toggle dark mode"><span class="material-symbols-rounded theme-icon">light_mode</span></button>
+</div>
+
+<div class="app-container" id="main-container">
+  
+  <div id="tab-home" class="tab-content active">
+    
+    <div class="card-panel" id="stats-panel">
+      <div class="stats-grid" style="flex-wrap: nowrap; margin-bottom: 0;">
+        <div class="stat-item" style="flex: 1;"><div class="stat-number" id="total-days">0</div><div class="stat-label">Days</div></div>
+        <div class="stat-item" style="flex: 1;"><div class="stat-number" id="streak-days">0</div><div class="stat-label">Streak</div></div>
+        <div class="stat-item" style="flex: 2; background: var(--accent-green-bg); border: 2px dashed var(--tertiary); display: flex; flex-direction: column; justify-content: center;">
+          <div class="stat-number" id="db-total-count" style="color: var(--tertiary); font-size: 1.6rem;">0</div>
+          <div class="stat-label" style="color: var(--tertiary); font-weight: 800;">Words</div>
+        </div>
+      </div>
+    </div>
+    <div id="total-words" style="display:none;"></div>
+
+    <div class="card-panel">
+      <h3 style="margin-bottom: 12px; margin-top: 0;">
+        <span class="material-symbols-rounded">rocket_launch</span> Study Modes
+      </h3>
+      
+      <div class="mastery-progress-container">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
+              <div style="font-size: 0.85rem; font-weight: 800; color: var(--on-surface); opacity: 0.7;">Mastered</div>
+              <div style="font-family: var(--font-jp-sans); font-weight: 900; color: var(--tertiary); font-size: 1.1rem; display: flex; align-items: baseline; gap: 4px;">
+                  <span id="mastery-count">0</span>
+                  <span style="font-size: 0.8rem; opacity: 0.5; color: var(--on-surface); font-weight: 700;">/ <span id="mastery-total">0</span> words</span>
+                  <span id="mastery-percent" style="font-size: 0.95rem;">(0%)</span>
+              </div>
+          </div>
+          <div class="mastery-track" style="margin-bottom: 12px;">
+              <div id="mastery-bar" class="mastery-fill" style="width: 0%;"></div>
+          </div>
+          
+          <div class="sub-progress-group" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; opacity: 0.8;">
+                  <div style="display: flex; align-items: center; gap: 6px; width: 60px;">
+                      <div style="width: 8px; height: 8px; border-radius: 50%; background: #F5B041;"></div>Kanji
+                  </div>
+                  <div style="flex: 1; height: 4px; background: rgba(0,0,0,0.1); border-radius: 2px; margin: 0 10px; overflow: hidden;">
+                      <div id="prog-bar-kanji" style="height: 100%; background: #F5B041; width: 0%; transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);"></div>
+                  </div>
+                  <div style="width: auto; min-width: 80px; white-space: nowrap; text-align: right; font-family: var(--font-jp-sans);" id="prog-txt-kanji">0 (0%)</div>
+              </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; opacity: 0.8;">
+                  <div style="display: flex; align-items: center; gap: 6px; width: 60px;">
+                      <div style="width: 8px; height: 8px; border-radius: 50%; background: #E74C3C;"></div>Kana
+                  </div>
+                  <div style="flex: 1; height: 4px; background: rgba(0,0,0,0.1); border-radius: 2px; margin: 0 10px; overflow: hidden;">
+                      <div id="prog-bar-kana" style="height: 100%; background: #E74C3C; width: 0%; transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);"></div>
+                  </div>
+                  <div style="width: auto; min-width: 80px; white-space: nowrap; text-align: right; font-family: var(--font-jp-sans);" id="prog-txt-kana">0 (0%)</div>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; opacity: 0.8;">
+                  <div style="display: flex; align-items: center; gap: 6px; width: 60px;">
+                      <div style="width: 8px; height: 8px; border-radius: 50%; background: #D0D3D4;"></div>Gloss
+                  </div>
+
+                  <div style="flex: 1; height: 4px; background: rgba(0,0,0,0.1); border-radius: 2px; margin: 0 10px; overflow: hidden;">
+                      <div id="prog-bar-meaning" style="height: 100%; background: #D0D3D4; width: 0%; transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);"></div>
+                  </div>
+                  <div style="width: auto; min-width: 80px; white-space: nowrap; text-align: right; font-family: var(--font-jp-sans);" id="prog-txt-meaning">0 (0%)</div>
+              </div>
+          </div>
+      </div>
+
+      <div class="filter-test-btn-group">
+        <button id="btn-start-filter-test" class="ft-main icon-text-gap">
+          <span class="material-symbols-rounded">psychology_alt</span> Custom Review
+        </button>
+        <div class="ft-divider"></div>
+        <button id="btn-test-range-trigger" class="ft-sub">
+          <span class="material-symbols-rounded">keyboard_arrow_down</span>
+        </button>
+        <div class="ft-divider"></div>
+        <button id="btn-test-display-trigger" class="ft-sub">
+          <span class="material-symbols-rounded">visibility</span>
+        </button>
+      </div>
+
+      <button id="btn-custom-group-select" class="bs-facade" style="width: 100%; margin-top: 12px; margin-bottom: 24px;">
+          <span class="bs-facade-text" id="custom-group-text">Default Deck (1-10)</span>
+          <span class="material-symbols-rounded" style="opacity:0.5;">keyboard_arrow_down</span>
+      </button>
+
+            <select id="test-range-select" style="display:none;" class="no-bs"></select>
+      <select id="test-display-select" style="display:none;" class="no-bs">
+          <option value="word">Kanji (Yellow)</option>
+          <option value="kana">Kana (Red)</option>
+          <option value="audio">Audio (Red)</option>
+          <option value="meaning">Gloss (White)</option>
+      </select>
+
+      
+      <div class="flex-row" style="margin-bottom: 8px; flex-wrap: wrap; gap: 12px;">
+        <button id="btn-start-pendulum" style="flex: 1 1 40%; margin-bottom: 0; white-space: nowrap; padding: 16px 8px; border-radius: var(--radius-md) !important;" class="icon-text-gap mode-btn-classic">
+            <span class="material-symbols-rounded">directions_run</span> Standard
+        </button>
+        <button id="btn-start-dual-track" style="flex: 1 1 40%; margin-bottom: 0; white-space: nowrap; padding: 16px 8px; border-radius: var(--radius-md) !important;" class="icon-text-gap mode-btn-challenge">
+            <span class="material-symbols-rounded">swords</span> Quiz
+        </button>
+        <button id="btn-start-rote-learning" style="flex: 1 1 40%; margin-bottom: 0; white-space: nowrap; padding: 16px 8px; border-radius: var(--radius-md) !important;" class="icon-text-gap mode-btn-rote">
+            <span class="material-symbols-rounded">menu_book</span> Focus
+        </button>
+        <button id="btn-start-memory-test" style="flex: 1 1 40%; margin-bottom: 0; white-space: nowrap; padding: 16px 8px; border-radius: var(--radius-md) !important;" class="icon-text-gap mode-btn-test">
+            <span class="material-symbols-rounded">quiz</span> Recall
+        </button>
+      </div>
+      
+            <button id="btn-long-press" class="btn-long-press" style="margin-top: 40px;">
+        <div class="lp-bg"></div>
+        <span class="lp-text">
+            <span class="material-symbols-rounded" style="font-size: 2.2rem; margin-right: 4px;">fingerprint</span> 
+            <span style="letter-spacing: 2px;">Hold to Complete</span>
+        </span>
+      </button>
+
+    </div>
+  </div>
+
+  <div id="tab-wordbank" class="tab-content hidden">
+    
+    <div class="search-bar-wrapper" style="position: relative; margin-bottom: 16px;">
+      <span class="material-symbols-rounded" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--primary); opacity: 0.6; font-size: 1.4rem;">search</span>
+      <input type="text" id="wb-search-input" placeholder="Search kanji, kana or meaning..." style="margin-bottom: 0; padding-left: 48px; border-radius: var(--radius-full); background: var(--surface-container); border: 2px solid var(--outline); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); height: 52px; font-size: 1rem;">
+    </div>
+
+    <div class="flex-row" style="justify-content: space-between; margin-bottom: 24px; flex-wrap: nowrap; gap: 12px;">
+      <div class="custom-select-wrapper" style="flex: 1;">
+          <select id="wb-folder-filter" style="display:none;">
+              </select>
+      </div>
+      <button id="btn-view-settings" class="glass-icon-btn" title="View & Layout">
+          <span class="material-symbols-rounded">pageview</span>
+      </button>
+    </div>
+
+    <div class="card-panel" style="margin-bottom: 24px;">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--outline); padding-bottom: 12px; margin-bottom: 16px;">
+        <h3 style="margin: 0; border: none; padding: 0;"><span class="material-symbols-rounded">folder_managed</span> Vocab & Files</h3>
+        <div style="display: flex; gap: 8px;">
+           <button id="wb-manage-toggle" class="glass-icon-btn" title="Manage"><span class="material-symbols-rounded" id="manage-icon">edit</span></button>
+           <button id="wb-batch-toggle" class="glass-icon-btn" title="Batch select"><span class="material-symbols-rounded" id="batch-icon">checklist_rtl</span></button>
+        </div>
+      </div>
+      
+      <div class="flex-row" style="margin-bottom: 0; gap: 12px;">
+         <button id="btn-new-folder" class="btn-outline icon-text-gap" style="flex: 1; border-color: var(--outline); color: var(--on-surface); padding: 12px; font-size: 0.95rem; box-shadow: none;"><span class="material-symbols-rounded" style="font-size:1.1rem;">create_new_folder</span> New Folder</button>
+         <button id="btn-del-folder" class="btn-outline icon-text-gap" style="flex: 1; border-color: var(--outline); color: var(--accent-red); padding: 12px; font-size: 0.95rem; box-shadow: none;" title="Delete current folder"><span class="material-symbols-rounded" style="font-size:1.1rem;">delete</span> Delete</button>
+      </div>
+    </div>
+
+    <select id="wb-col-select" style="display:none;" class="no-bs">
+        <option value="2">2</option> <option value="3" selected>3</option> <option value="4">4</option>
+    </select>
+    <select id="wb-blur-select" style="display:none;" class="no-bs">
+        <option value="all">all</option> <option value="word">word</option> <option value="kana">kana</option> <option value="meaning">meaning</option>
+    </select>
+
+    <div id="wb-grid-container">
+      <div id="wb-grid" data-cols="3"></div>
+      <div id="wb-scroll-sentinel" class="loading-dots" style="display: none;"><div></div><div></div><div></div></div> 
+    </div>
+  </div>
+
+  <div id="tab-records" class="tab-content hidden">
+    <div class="card-panel" style="padding-bottom: 8px;">
+      <h3 style="margin-bottom: 16px; margin-top: 0;">
+        <span class="material-symbols-rounded">filter_vintage</span> Combo Leaderboard
+      </h3>
+      
+      <div class="group-tabs" id="lb-tabs" style="margin-bottom: 24px;">
+          <div class="g-tab active" data-mode="dual-track" style="flex: 1; text-align: center;">Challenge</div>
+          <div class="g-tab" data-mode="memory-test" style="flex: 1; text-align: center;">Memory Test</div>
+          <div class="g-tab" data-mode="rote-learning" style="flex: 1; text-align: center;">Rote</div>
+      </div>
+      <div id="lb-single-list"></div>
+      <button id="btn-lb-load-more" class="btn-outline" style="width: 100%; margin-top: 16px; margin-bottom: 16px; display: none;">Load More</button>
+      
+    </div>
+  </div>
+
+
+  <div id="tab-settings" class="tab-content hidden">
+
+    <div class="card-panel">
+      <h3 style="margin-bottom: 20px;"><span class="material-symbols-rounded">save</span> Backup & Security</h3>
+      <div class="setting-desc" style="margin-bottom: 16px;">Export your vocabulary, progress, and punch records as a local backup file.</div>
+      <div class="flex-row" style="margin-bottom: 0; gap: 12px;">
+         <button id="btn-export-backup" class="btn-outline icon-text-gap" style="flex: 1;"><span class="material-symbols-rounded" style="font-size: 1.1rem;">download</span> Export Backup</button>
+         <button id="btn-import-backup" class="btn-outline icon-text-gap" style="flex: 1; border-color: var(--tertiary); color: var(--tertiary);"><span class="material-symbols-rounded" style="font-size: 1.1rem;">upload</span> Import Restore</button>
+         <input type="file" id="file-import-backup" accept=".json" style="display: none;">
+      </div>
+    </div>
+    
+    <div class="card-panel">
+      <h3 style="margin-bottom: 20px;"><span class="material-symbols-rounded">tune</span> Preferences</h3>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-title">Volume Key Navigation</div>
+          <div class="setting-desc">Use physical volume buttons to flip cards while studying</div>
+        </div>
+        <label class="tactile-switch-wrap">
+          <input type="checkbox" id="setting-vol-nav" class="tactile-switch">
+          <span class="tactile-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-title">Auto-Pronunciation</div>
+          <div class="setting-desc">Automatically read aloud using system TTS when card changes</div>
+        </div>
+        <label class="tactile-switch-wrap">
+          <input type="checkbox" id="setting-auto-speak" class="tactile-switch">
+          <span class="tactile-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-title">Translucent Controls</div>
+          <div class="setting-desc">Apply translucent overlay effect to home buttons in dark mode</div>
+        </div>
+        <label class="tactile-switch-wrap">
+          <input type="checkbox" id="setting-dark-btn" class="tactile-switch">
+          <span class="tactile-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-title">Defer Reviewed Items</div>
+          <div class="setting-desc">In Custom Review, move previously failed words to the end of the queue</div>
+        </div>
+        <label class="tactile-switch-wrap">
+          <input type="checkbox" id="setting-postpone-tested" class="tactile-switch">
+          <span class="tactile-slider"></span>
+        </label>
+      </div>
+
+            <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-title">Native Ruby Rendering</div>
+          <div class="setting-desc">Use native &lt;ruby&gt; tags for furigana; disable to use MathJax engine</div>
+        </div>
+        <label class="tactile-switch-wrap">
+          <input type="checkbox" id="setting-ruby-render" class="tactile-switch">
+          <span class="tactile-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <div class="setting-title">Exclude Mastered Items</div>
+          <div class="setting-desc">In Custom Review, automatically exclude words whose current dimension bar is already lit</div>
+        </div>
+        <label class="tactile-switch-wrap">
+          <input type="checkbox" id="setting-skip-mastered" class="tactile-switch">
+          <span class="tactile-slider"></span>
+        </label>
+      </div>
+
+
+<div class="setting-item">
+    <div class="setting-info">
+      <div class="setting-title">TTS Engine</div>
+      <div class="setting-desc">Select voice source for pronunciation (Nanami recommended)</div>
+    </div>
+    <div class="custom-select-wrapper setting-compact-wrapper">
+      <select id="setting-tts-engine">
+        <option value="youdao">Youdao</option>
+        <option value="azure">Azure Nanami</option>
+        <option value="local">System</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="setting-item" style="border-bottom: none;">
+    <div class="setting-info">
+      <div class="setting-title">Haptic Feedback Test</div>
+      <div class="setting-desc">Test if device supports vibration (iOS not supported)</div>
+    </div>
+    <button id="btn-test-vibrate" class="btn-setting-action">Test Vibration</button>
+  </div>
+
+
+
+</div>
+
+    <div class="card-panel">
+      <h3 style="margin-bottom: 20px;"><span class="material-symbols-rounded">library_add</span> Import & Reset</h3>
+      <textarea id="custom-input" placeholder="Format: word, kana, type, meaning, example (optional)&#10;Separate by comma or tab" class="settings-textarea"></textarea>
+      <button id="btn-import">Import Words</button>
+      
+      <div class="danger-zone">
+        <div class="setting-desc" style="margin-bottom: 12px; color: var(--accent-red);">Warning: This will erase all personal progress and imported words</div>
+        <button id="btn-reset" class="btn-outline" style="border-color: var(--accent-red); color: var(--accent-red);">Reset to Default</button>
+      </div>
+    </div>
+
+  </div>
+
+</div> 
+
+<div id="study-area" class="hidden fullscreen-overlay">
+  <div id="study-top-bar" class="study-header">
+    <div class="sh-left">
+      <button id="btn-exit-study" class="sh-btn"><span class="material-symbols-rounded">chevron_left</span> Exit</button>
+    </div>
+    <div class="sh-center">
+      <span id="progress-text" class="sh-progress">0 / 0</span>
+    </div>
+    <div class="sh-right">
+      <select id="next-display-mode" class="no-bs" style="display:none;">
+        <option value="all">Show All</option><option value="word">Kanji</option><option value="kana">Kana</option><option value="meaning">Meaning</option>
+      </select>
+      <button id="btn-display-mode-trigger" class="glass-icon-btn" title="Blur mode"><span class="material-symbols-rounded">visibility</span></button>
+      <button class="glass-icon-btn theme-toggle-btn"><span class="material-symbols-rounded theme-icon">light_mode</span></button>
+    </div>
+  </div>
+  
+  <div id="pixel-matrix"></div>
+  
+      <div class="flash-card" id="flash-card">
+    <div id="combo-badge" class="combo-badge">Combo x0</div>
+    
+    <div class="watermark-layer">
+      <div class="card-glare"></div>
+      <div id="flash-watermark" class="watermark"></div>
+    </div>
+
+
+    <div id="btn-speaker" class="speaker-icon" role="button" tabindex="0" aria-label="Pronounce"><span class="material-symbols-rounded" aria-hidden="true">volume_up</span></div>
+
+<div id="star-btn" class="star-btn" role="button" tabindex="0" aria-label="Star word"><span class="material-symbols-rounded" id="star-icon" aria-hidden="true">star</span></div>
+    <div id="mt-blind-audio-ui" class="hidden" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px;">
+        <button id="btn-mt-replay" class="glass-icon-btn" style="width: 80px; height: 80px; margin-bottom: 24px; background: var(--primary-container);">
+            <span class="material-symbols-rounded" style="font-size: 3.5rem; color: var(--primary);">play_arrow</span>
+        </button>
+        <div id="btn-mt-show-hint" style="font-size: 0.85rem; color: var(--outline); cursor: pointer; text-decoration: underline; opacity: 0.8;">Can't hear? Show kana</div>
+    </div>
+
+    <div class="word-main blur-target" id="w-word">Word</div>
+    <div class="info-row-group"><div class="kana-row blur-target" id="w-kana">Kana</div><div class="type-row blur-target" id="w-type"></div><div class="meaning-row blur-target" id="w-meaning">Meaning</div></div>
+    <div class="dt-example-box blur-target" id="w-example-box" style="cursor: pointer;"></div>
+  </div>
+  
+  <div id="dual-track-ui" class="hidden">
+    <div id="dt-spell-area" class="hidden"><div id="dt-spell-input" class="dt-spell-input-box"></div><div id="dt-spell-keyboard" class="dt-spell-keyboard"></div></div>
+    <div id="dt-choice-area" class="hidden"><div id="dt-choice-buttons"></div></div>
+  </div>
+
+  <div id="memory-test-ui" class="hidden" style="margin-bottom: 24px;">
+    <div id="mt-spell-area" class="hidden"><div id="mt-spell-input" class="dt-spell-input-box"></div><div id="mt-spell-keyboard" class="dt-spell-keyboard"></div></div>
+    <div id="mt-choice-area" class="hidden"><div id="mt-choice-buttons"></div></div>
+  </div>
+
+  <div id="capsule-pendulum" class="action-grid-2 hidden">
+    <button id="btn-prev" class="btn-action"><span class="material-symbols-rounded">arrow_back</span><span>Prev</span></button>
+    <button id="btn-next" class="btn-action"><span class="material-symbols-rounded">arrow_forward</span><span>Next</span></button>
+    <button id="btn-finish" class="btn-action" style="display: none;"><span class="material-symbols-rounded">task_alt</span><span>Finish</span></button>
+  </div>
+
+    <div id="capsule-filter-test" class="action-flex hidden" style="margin-bottom: var(--space-md); margin-top: auto;">
+    <button id="ft-forget" class="btn-action btn-ft-red">Again</button>
+    <button id="ft-blur" class="btn-action btn-ft-orange">Hard</button>
+    <button id="ft-know" class="btn-action btn-ft-green">Good</button>
+  </div>
+
+
+  <div id="capsule-filter-judge" class="action-flex hidden" style="margin-bottom: var(--space-md); margin-top: auto;">
+    <button id="ft-wrong" class="btn-action btn-ft-red"><span class="material-symbols-rounded">close</span> Wrong</button>
+    <button id="ft-correct" class="btn-action btn-ft-green"><span class="material-symbols-rounded">check</span> Correct</button>
+  </div>
+
+</div>
+
+<nav id="bottom-nav" class="bottom-nav" role="navigation" aria-label="Main navigation">
+  <div class="nav-item active" data-target="tab-home" data-title="home|Pendulum" role="button" tabindex="0" aria-label="Home" aria-current="page">
+    <span class="material-symbols-rounded nav-icon" aria-hidden="true">home</span>
+    <span class="nav-label">Home</span>
+  </div>
+  <div class="nav-item" data-target="tab-records" data-title="leaderboard|Activity" role="button" tabindex="0" aria-label="Activity">
+    <span class="material-symbols-rounded nav-icon" aria-hidden="true">leaderboard</span>
+    <span class="nav-label">Activity</span>
+  </div>
+  <div class="nav-item" data-target="tab-wordbank" data-title="grid_view|Library" role="button" tabindex="0" aria-label="Library">
+    <span class="material-symbols-rounded nav-icon" aria-hidden="true">grid_view</span>
+    <span class="nav-label">Library</span>
+  </div>
+  <div class="nav-item" data-target="tab-settings" data-title="settings|Settings" role="button" tabindex="0" aria-label="Settings">
+    <span class="material-symbols-rounded nav-icon" aria-hidden="true">settings</span>
+    <span class="nav-label">Settings</span>
+  </div>
+</nav>
+
+<div id="bs-overlay" class="modal-overlay">
+    <div class="bottom-sheet">
+        <div class="bs-handle"></div>
+        <div class="bs-scrollable-content">
+            <h3 id="bs-title">Select</h3>
+            <div id="bs-options" class="bs-options"></div>
+        </div>
+    </div>
+</div>
+
+<div id="group-select-overlay" class="modal-overlay">
+    <div class="bottom-sheet group-bs" style="padding: 0;">
+        <div class="bs-handle" style="margin-top: 20px; margin-bottom: 12px;"></div>
+        <h3 style="text-align:center; margin-bottom: 16px; border:none; justify-content:center; color: var(--on-surface);">Study Scope</h3>
+        <div class="group-tabs" id="gs-tabs">
+            <div class="g-tab active" data-cat="default">Default</div>
+            <div class="g-tab" data-cat="virtual_cleared">Mastered</div>
+            <div class="g-tab" data-cat="virtual_uncleared">Unmastered</div>
+            <div class="g-tab" data-cat="virtual_starred">Starred</div>
+        </div>
+        <div id="group-list-container" class="bs-scrollable-content" style="padding: 16px 20px 40px; max-height: 50vh;"></div>
+    </div>
+</div>
+
+<div id="view-settings-overlay" class="modal-overlay">
+    <div class="bottom-sheet">
+        <div class="bs-handle"></div>
+        <div class="bs-scrollable-content">
+            <h3 style="text-align:center; margin-bottom: 24px; border:none; justify-content:center; color: var(--on-surface);">View & Layout</h3>
+            <div style="font-size:0.95rem; font-weight:800; margin-bottom:12px; color:var(--primary);">Columns</div>
+            <div class="flex-row" style="gap:12px; margin-bottom: 28px; flex-wrap: nowrap;">
+                <button class="vs-col-btn vs-btn selected" data-val="3" style="flex:1;">3 cols</button>
+                <button class="vs-col-btn vs-btn" data-val="2" style="flex:1;">2 cols</button>
+                <button class="vs-col-btn vs-btn" data-val="4" style="flex:1;">4 cols</button>
+            </div>
+            <div style="font-size:0.95rem; font-weight:800; margin-bottom:12px; color:var(--primary);">Blur Mode</div>
+            <div class="flex-row" style="gap:12px; flex-wrap:wrap;">
+                <button class="vs-blur-btn vs-btn selected" data-val="all" style="flex:1 1 40%;">Show All</button>
+                <button class="vs-blur-btn vs-btn" data-val="meaning" style="flex:1 1 40%;">Gloss Only</button>
+                <button class="vs-blur-btn vs-btn" data-val="word" style="flex:1 1 40%;">Kanji Only</button>
+                <button class="vs-blur-btn vs-btn" data-val="kana" style="flex:1 1 40%;">Kana Only</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="dialog-overlay" class="modal-overlay">
+    <div class="dialog-content">
+        <h3 id="dialog-title" style="border:none; margin-bottom:12px; justify-content:center;">Confirm</h3>
+        <p id="dialog-msg" style="font-size:1rem; opacity:0.8; margin-bottom:24px; line-height:1.5;">Message</p>
+        <div class="flex-row" style="margin-bottom:0;">
+            <button id="dialog-confirm" style="flex:1;">OK</button>
+            <button id="dialog-cancel" class="btn-outline" style="flex:1;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="prompt-overlay" class="modal-overlay">
+    <div class="dialog-content">
+        <h3 id="prompt-title" style="border:none; margin-bottom:16px; justify-content:center;">Input</h3>
+        <input type="text" id="prompt-input" style="text-align:center; font-weight:700; border-radius: 999px;" />
+        <div class="flex-row" style="margin-bottom:0;">
+            <button id="prompt-confirm" style="flex:1;">OK</button>
+            <button id="prompt-cancel" class="btn-outline" style="flex:1;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="edit-overlay" class="modal-overlay">
+    <div class="dialog-content edit-modal-content">
+        <h3 style="border:none; margin-bottom:20px; justify-content:center;"><span class="material-symbols-rounded">edit_square</span> Edit Word</h3>
+        <div class="edit-input-group"><label>Word</label><input type="text" id="edit-word"></div>
+        <div class="edit-input-group"><label>Kana</label><input type="text" id="edit-kana"></div>
+        <div class="edit-input-group"><label>Type</label><input type="text" id="edit-type"></div>
+        <div class="edit-input-group"><label>Meaning</label><input type="text" id="edit-meaning"></div>
+        <div class="flex-row" style="margin-top: 24px; margin-bottom: 0;">
+            <button id="btn-save-edit" style="flex: 1; background: var(--tertiary);">Save Changes</button>
+            <button id="btn-cancel-edit" class="btn-outline" style="flex: 1;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="move-overlay" class="modal-overlay" style="align-items: flex-end;">
+  <div class="bottom-sheet">
+    <div class="bs-handle"></div>
+    <div class="bs-scrollable-content">
+      <h3 style="border: none; margin-bottom: 24px; justify-content:center; color: var(--on-surface);">Move to Folder</h3>
+      <div id="move-folder-list" class="bs-options"></div>
+      
+      <button id="btn-cancel-move" class="btn-outline" style="margin-top: 16px; border:none !important; opacity:0.5; box-shadow:none !important;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="detail-overlay" class="modal-overlay">
+  <div class="detail-card-container" id="detail-card-container">
+    <div id="dt-hanko-badge" class="card-hanko sakura-badge" style="display: none;"></div>
+    
+    <div class="watermark-layer"><div id="dt-watermark" class="watermark"></div></div>
+    
+    <div id="detail-close"><span class="material-symbols-rounded">close</span></div>
+    
+    <div id="dt-star-btn" class="wb-c-star dt-star-btn"><span class="material-symbols-rounded" id="dt-star-icon">star</span></div>
+
+    <button class="detail-nav-btn" id="detail-prev"><span class="material-symbols-rounded">chevron_left</span></button>
+    <button class="detail-nav-btn" id="detail-next"><span class="material-symbols-rounded">chevron_right</span></button>
+    
+    <div id="dt-anim-wrapper" class="detail-anim-wrapper">
+      <div class="dt-word" id="dt-word">Word</div>
+      <div class="info-row-group"><div class="dt-kana" id="dt-kana">Kana</div><div class="dt-type" id="dt-type"></div><div class="dt-mean" id="dt-mean">Meaning</div></div>
+      <div class="dt-example-box" id="dt-example-box"></div>
+    </div>
+  </div>
+</div>
+
+<div id="batch-bar" class="batch-bar" style="display: none;">
+  <span class="batch-count"><span id="batch-count-num">0</span> selected</span>
+  <div style="display: flex; gap: 4px; align-items: center;">
+    <button id="btn-batch-move" class="icon-text-gap"><span class="material-symbols-rounded" style="font-size:1.1rem;">move_item</span> Move</button>
+    <button id="btn-batch-del" style="background: var(--accent-red); color: var(--on-primary);" class="icon-text-gap"><span class="material-symbols-rounded" style="font-size:1.1rem;">delete</span> Delete</button>
+    <div class="batch-divider" style="width: 1px; height: 16px; background: rgba(139, 121, 103, 0.2); margin: 0 2px;"></div>
+    <button id="btn-batch-cancel" title="Cancel"><span class="material-symbols-rounded" style="font-size:1.3rem;">close</span></button>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
+<script src="data.js"></script> 
+<script src="app.js"></script>
+
+</body>
+</html>
